@@ -1,19 +1,19 @@
 
 Makefile
-    Calls the docker-compose.yml
+    Do docker compose up: calls the docker-compose.yml
 
 docker-compose
-    Creates every volume
     Builds every container in the correct order (DB -> Wordpress -> NGINX)
         e.g.
             services:
                 wordpress:
                     build: ./wordpress      # when ./wordpress/Dockerfile
+    Creates every volume (based on the volume: in the file ?)
     Defines the correct configs
     
 Dockerfile
     Defines the base image:
-        FROM ubuntu:22.04
+        FROM ubuntu:22.04 (Alpine/Debian)
     Downloads the necessary app dependencies:
         RUN apt-get update && apt-get install -y python3 python3-pip
     Tell what port this service is listening:
@@ -22,3 +22,7 @@ Dockerfile
         CMD ["./myapp"]
 
 
+Dockerfiles: NGINX, WordPress, MariaDB
+
+- Have the two users harcoded into the DB Dockerfile so that it creates the DB volume with them.
+- 
