@@ -1,0 +1,42 @@
+name: Inception
+
+services:
+    mariadb:
+        build: ./requirements/mariadb
+        image: mariadb
+        container_name: mariadb
+        restart: unless-stopped
+        #environment variables set in the container
+        environment:
+            MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+        ports:
+            - "3306:3306"
+        volumes:
+            - db_data:/var/lib/mysql
+        #what secrets are used in this container
+        secrets:
+            - db_root_password
+#    wordpress:
+#        build: ./requirements/wordpress
+#        container_name: wordpress
+#        depends_on:
+#            - mariadb
+#        expose:
+#            - "9000"
+#        environment:
+#        WORDPRESS_DB_HOST: db:3306
+#        WORDPRESS_DB_USER: wordpress
+#        WORDPRESS_DB_PASSWORD: wordpresspassword
+#        WORDPRESS_DB_NAME: wordpress
+#        volumes:
+#            - wordpress_data:/var/www/html
+
+volumes:
+    db_data:
+    #wordpress_data:
+
+#tells docker that we have secrets to use
+secrets:
+    db_root_password:
+        file: ${DB_ROOT_PW_FILE_HOST}
