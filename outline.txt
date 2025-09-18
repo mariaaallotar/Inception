@@ -26,3 +26,19 @@ Dockerfiles: NGINX, WordPress, MariaDB
 
 - Have the two users harcoded into the DB Dockerfile so that it creates the DB volume with them.
 - 
+
+
+
+
+In compose:
+
+depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+
+HEALTHCHECK in Dockerfiles
+
+
+
+Wordpress config used?

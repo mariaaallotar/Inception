@@ -1,0 +1,2 @@
+; wp core install eats memory
+memory_limit = 512M

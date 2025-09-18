@@ -1,29 +1,28 @@
-FROM alpine:3.21.4
+FROM alpine:3.21
 
 RUN apk add --no-cache \
-    php8 \
-    php8-fpm \
-    php8-mysqli \
-    php8-json \
-    php8-mbstring \
-    php8-curl \
-    php8-xml \
-    php8-session \
-    php8-opcache \
-    php8-phar \
-    php8-gd \
+    php83 \
+    php83-fpm \
+    php83-mysqli \
+    php83-json \
+    php83-mbstring \
+    php83-curl \
+    php83-xml \
+    php83-session \
+    php83-opcache \
+    php83-phar \
+    php83-gd \
     wget \
-    unzip \
-    bash
+    unzip
 
-WORKDIR /var/www/html
+RUN mkdir -p /var/www/wp /var/www/html
 
-RUN wget https://wordpress.org/latest.tar.gz \
-    && tar -xzf latest.tar.gz --strip-components=1 \
-    && rm latest.tar.gz
+COPY tools/setup.sh /usr/local/bin/wordpress/setup.sh
+RUN chmod +x /usr/local/bin/wordpress/setup.sh
 
-RUN chown -R nobody:nobody /var/www/html
+ARG WEB_USER
+ARG WEB_GROUP
+#RUN addgroup -S $WEB_GROUP
+RUN adduser -D -H -s /sbin/nologin -G $WEB_GROUP $WEB_USER 
 
-EXPOSE 9000
-
-CMD ["php-fpm8", "-F"]
+CMD ["/usr/local/bin/wordpress/setup.sh"]

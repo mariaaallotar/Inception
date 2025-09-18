@@ -3,40 +3,105 @@ name: Inception
 services:
     mariadb:
         build: ./requirements/mariadb
-        image: mariadb
         container_name: mariadb
-        restart: unless-stopped
-        #environment variables set in the container
+        init: true
+        env_file: .env
         environment:
             MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
-            MYSQL_DATABASE: ${MYSQL_DATABASE}
-        ports:
-            - "3306:3306"
+            MYSQL_USER_PASSWORD_FILE: /run/secrets/db_user_password
+        configs:
+            - source: mariadb_config
+              target: /etc/my.cnf.d/mariadb.cnf
+              mode: 0444
         volumes:
-            - db_data:/var/lib/mysql
-        #what secrets are used in this container
+            - mariadb:/var/lib/mysql
         secrets:
             - db_root_password
-#    wordpress:
-#        build: ./requirements/wordpress
-#        container_name: wordpress
-#        depends_on:
-#            - mariadb
-#        expose:
-#            - "9000"
-#        environment:
-#        WORDPRESS_DB_HOST: db:3306
-#        WORDPRESS_DB_USER: wordpress
-#        WORDPRESS_DB_PASSWORD: wordpresspassword
-#        WORDPRESS_DB_NAME: wordpress
-#        volumes:
-#            - wordpress_data:/var/www/html
+            - db_user_password
+        restart: on-failure
+    wordpress:
+        build: 
+            context: ./requirements/wordpress/
+            args:
+                WEB_USER: ${WEB_USER}
+                WEB_GROUP: ${WEB_GROUP}
+        container_name: wordpress
+        init: true
+        env_file: .env
+        environment:
+            MYSQL_USER_PASSWORD_FILE: /run/secrets/db_user_password
+            WORDPRESS_ADMIN_PASSWORD_FILE: /run/secrets/wp_admin_password
+            WORDPRESS_USER_PASSWORD_FILE: /run/secrets/wp_user_password
+        depends_on:
+            - mariadb
+        configs:
+            - source: wordpress_config
+              target: /etc/php83/php-fpm.d/www.conf
+              mode: 0444
+            - source: php_config
+              target: /etc/php83/conf.d/override.ini
+        volumes:
+            - wordpress:/var/www/html
+        ports:
+            - "9000:9000"
+        secrets:
+            - db_user_password
+            - wp_admin_password
+            - wp_user_password
+        restart: on-failure
+    nginx:
+        build: 
+            dockerfile: ./requirements/nginx/Dockerfile
+            args:
+                WEB_USER: ${WEB_USER}
+                WEB_GROUP: ${WEB_GROUP}
+        container_name: nginx
+        init: true
+        env_file: ".env"
+        configs:
+            - source: nginx_config
+              target: /etc/nginx/nginx.conf
+              mode: 0444
+        volumes:
+            - wordpress:/var/www/html
+        ports:
+            - "443:443"
+        depends_on:
+            - wordpress
+        restart: on-failure
+
+configs:
+    mariadb_config:
+        file: ./requirements/mariadb/conf/mariadb.cnf
+    wordpress_config:
+        file: ./requirements/wordpress/conf/www.conf
+    php_config:
+        file: ./requirements/wordpress/conf/php.cnf
+    nginx_config:
+        file: ./requirements/nginx/conf/nginx.conf
 
 volumes:
-    db_data:
-    #wordpress_data:
+    wordpress:
+        name: wordpress
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ~/data/wordpress/
+    mariadb:
+        name: mariadb
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ~/data/mariadb/
 
-#tells docker that we have secrets to use
 secrets:
     db_root_password:
         file: ${DB_ROOT_PW_FILE_HOST}
+    db_user_password:
+        file: ${DB_USER_PW_FILE_HOST}
+    wp_admin_password:
+        file: ${WP_ADMIN_PW_FILE_HOST}
+    wp_user_password:
+        file: ${WP_USER_PW_FILE_HOST}
