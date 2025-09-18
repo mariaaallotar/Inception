@@ -18,6 +18,8 @@ services:
         secrets:
             - db_root_password
             - db_user_password
+        networks:
+            - docker-network
         restart: on-failure
     wordpress:
         build: 
@@ -48,6 +50,8 @@ services:
             - db_user_password
             - wp_admin_password
             - wp_user_password
+        networks:
+            - docker-network
         restart: on-failure
     nginx:
         build: 
@@ -68,6 +72,8 @@ services:
             - "443:443"
         depends_on:
             - wordpress
+        networks:
+            - docker-network
         restart: on-failure
 
 configs:
@@ -105,3 +111,7 @@ secrets:
         file: ${WP_ADMIN_PW_FILE_HOST}
     wp_user_password:
         file: ${WP_USER_PW_FILE_HOST}
+
+networks:
+  docker-network:
+    driver: bridge
